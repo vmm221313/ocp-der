@@ -1,0 +1,55 @@
+includes:
+- configs/is2re/10k/base.yml
+
+model:
+  name: cgcnn-evidential
+  evidential: True
+  atom_embedding_size: 128
+  fc_feat_size: 256
+  num_fc_layers: 4
+  num_graph_conv_layers: 5
+  num_gaussians: 100
+  cutoff: 6.0
+  regress_forces: False
+  use_pbc: True
+  lambda_: 0.05
+  units: 1
+  softplus_beta: 1
+  softplus_threshold: 20
+
+
+# *** Important note ***
+#   The total number of gpus used for this run was 1.
+#   If the global batch size (num_gpus * batch_size) is modified
+#   the lr_milestones and warmup_steps need to be adjusted accordingly.
+
+optim:
+  batch_size: 64
+  eval_batch_size: 64
+  num_workers: 16
+  lr_initial: 0.01
+  lr_gamma: 0.1
+  lr_milestones: # steps at which lr_initial <- lr_initial * lr_gamma
+    - 781
+    - 1406
+    - 2031
+  warmup_steps: 468
+  warmup_factor: 0.2
+  max_epochs: 2 # 20 ## CHANGE THIS BACK AFTER TEST
+  loss: evidential
+
+dataset:
+  # train data
+  - src: /pscratch/sd/v/varunvm/ocp/data/is2re/10k/train/data.lmdb
+    normalize_labels: True
+    target_mean: -0.969171404838562
+    target_std: 1.3671793937683105
+  # val data (optional)
+  - src: /pscratch/sd/v/varunvm/ocp/data/is2re/all/val_id/data.lmdb
+  # test data (optional)
+  # - src: [Path to test data]
+
+logging=:
+  task: IS2RE
+  desc: Val ID Prediction
+  data_split: 10k

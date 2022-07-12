@@ -41,7 +41,7 @@ from ocpmodels.modules.evaluator import Evaluator
 from ocpmodels.modules.exponential_moving_average import (
     ExponentialMovingAverage,
 )
-from ocpmodels.modules.loss import AtomwiseL2Loss, DDPLoss, L2MAELoss
+from ocpmodels.modules.loss import AtomwiseL2Loss, DDPLoss, L2MAELoss, EvidentialLoss
 from ocpmodels.modules.normalizer import Normalizer
 from ocpmodels.modules.scheduler import LRScheduler
 
@@ -444,6 +444,8 @@ class BaseTrainer(ABC):
                 self.loss_fn[loss] = L2MAELoss()
             elif loss_name == "atomwisel2":
                 self.loss_fn[loss] = AtomwiseL2Loss()
+            elif loss_name == 'evidential':
+                self.loss_fn[loss] = EvidentialLoss(self.config["model"]["lambda_"])
             else:
                 raise NotImplementedError(
                     f"Unknown loss function name: {loss_name}"

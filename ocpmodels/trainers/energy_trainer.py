@@ -102,7 +102,10 @@ class EnergyTrainer(BaseTrainer):
 
     def load_task(self):
         logging.info(f"Loading dataset: {self.config['task']['dataset']}")
-        self.num_targets = 1
+        if (self.config['model']['evidential'] == True):
+            self.num_targets = 4
+        else:
+            self.num_targets = 1
 
     @torch.no_grad()
     def predict(
