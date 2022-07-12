@@ -291,7 +291,13 @@ class ForcesTrainer(BaseTrainer):
         primary_metric = self.config["task"].get(
             "primary_metric", self.evaluator.task_primary_metric[self.name]
         )
-        self.best_val_metric = 1e9 if "mae" in primary_metric else -1.0
+        if (
+            not hasattr(self, "primary_metric")
+            or self.primary_metric != primary_metric
+        ):
+            self.best_val_metric = 1e9 if "mae" in primary_metric else -1.0
+        else:
+            primary_metric = self.primary_metric
         self.metrics = {}
 
         # Calculate start_epoch from step instead of loading the epoch number
@@ -499,8 +505,10 @@ class ForcesTrainer(BaseTrainer):
                         [batch.fixed.to(self.device) for batch in batch_list]
                     )
                     mask = fixed == 0
-                    if self.config["optim"]["loss_force"].startswith(
-                        "atomwise"
+                    if (
+                        self.config["optim"]
+                        .get("loss_force", "mae")
+                        .startswith("atomwise")
                     ):
                         force_mult = self.config["optim"].get(
                             "force_coefficient", 1
@@ -593,8 +601,14 @@ class ForcesTrainer(BaseTrainer):
         evaluator_is2rs, metrics_is2rs = Evaluator(task="is2rs"), {}
         evaluator_is2re, metrics_is2re = Evaluator(task="is2re"), {}
 
-        if hasattr(self.relax_dataset[0], "pos_relaxed") and hasattr(
-            self.relax_dataset[0], "y_relaxed"
+        # Need both `pos_relaxed` and `y_relaxed` to compute val IS2R* metrics.
+        # Else just generate predictions.
+        if (
+            hasattr(self.relax_dataset[0], "pos_relaxed")
+            and self.relax_dataset[0].pos_relaxed is not None
+        ) and (
+            hasattr(self.relax_dataset[0], "y_relaxed")
+            and self.relax_dataset[0].y_relaxed is not None
         ):
             split = "val"
         else:
