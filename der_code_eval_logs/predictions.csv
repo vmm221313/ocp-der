@@ -1,0 +1,5 @@
+data_split,task,model,lambda_,desc,start_time,job_id
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-11-14-04-51,1
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-11-14-05-28,1
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-11-14-05-29,1
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-11-14-05-30,1
