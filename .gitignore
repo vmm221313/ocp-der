@@ -111,3 +111,6 @@ Local
 
 # VS Code
 .vscode/
+
+# Slurm logs
+slurm*

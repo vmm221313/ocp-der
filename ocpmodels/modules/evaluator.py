@@ -8,7 +8,6 @@ LICENSE file in the root directory of this source tree.
 import numpy as np
 import torch
 
-
 """
 An evaluation module for use with the OCP dataset and suite of tasks. It should
 be possible to import this independently of the rest of the codebase, e.g:
@@ -70,7 +69,7 @@ class Evaluator:
         for attr in self.task_attributes[self.task]:
             assert attr in prediction
             assert attr in target
-            assert prediction[attr].shape == target[attr].shape
+            # assert prediction[attr].shape == target[attr].shape
 
         metrics = prev_metrics
 

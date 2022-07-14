@@ -102,7 +102,11 @@ class EnergyTrainer(BaseTrainer):
 
     def load_task(self):
         logging.info(f"Loading dataset: {self.config['task']['dataset']}")
-        self.num_targets = 1
+        print(self.config)
+        if self.config["model_attributes"]["evidential"]:
+            self.num_targets = 4
+        else:
+            self.num_targets = 1
 
     @torch.no_grad()
     def predict(
@@ -169,7 +173,7 @@ class EnergyTrainer(BaseTrainer):
         primary_metric = self.config["task"].get(
             "primary_metric", self.evaluator.task_primary_metric[self.name]
         )
-        self.best_val_metric = 1e9
+        self.best_val_mae = 1e9
 
         # Calculate start_epoch from step instead of loading the epoch number
         # to prevent inconsistencies due to different batch size in checkpoint.
@@ -251,9 +255,9 @@ class EnergyTrainer(BaseTrainer):
                             val_metrics[
                                 self.evaluator.task_primary_metric[self.name]
                             ]["metric"]
-                            < self.best_val_metric
+                            < self.best_val_mae
                         ):
-                            self.best_val_metric = val_metrics[
+                            self.best_val_mae = val_metrics[
                                 self.evaluator.task_primary_metric[self.name]
                             ]["metric"]
                             self.save(
@@ -320,11 +324,13 @@ class EnergyTrainer(BaseTrainer):
             [batch.y_relaxed.to(self.device) for batch in batch_list], dim=0
         )
 
+        gamma, v, alpha, beta = torch.split(out["energy"], 1, dim=-1)
+
         if self.normalizer.get("normalize_labels", False):
-            out["energy"] = self.normalizers["target"].denorm(out["energy"])
+            gamma = self.normalizers["target"].denorm(gamma)
 
         metrics = evaluator.eval(
-            out,
+            gamma,
             {"energy": energy_target},
             prev_metrics=metrics,
         )
