@@ -1,5 +1,5 @@
 includes:
-- configs/is2re/10k/base.yml
+- configs/is2re/all/base.yml
 
 model:
   name: cgcnn-evidential
@@ -16,7 +16,6 @@ model:
   units: 1
   softplus_beta: 1
   softplus_threshold: 20
-
 
 # *** Important note ***
 #   The total number of gpus used for this run was 1.
@@ -35,12 +34,12 @@ optim:
     - 2031
   warmup_steps: 468
   warmup_factor: 0.2
-  max_epochs: 2
+  max_epochs: 20 
   loss_energy: evidential
 
 dataset:
   # train data
-  - src: /pscratch/sd/v/varunvm/ocp/data/is2re/10k/train/data.lmdb
+  - src: /pscratch/sd/v/varunvm/ocp/data/is2re/all/train/data.lmdb
     normalize_labels: True
     target_mean: -0.969171404838562
     target_std: 1.3671793937683105
@@ -52,5 +51,5 @@ dataset:
 task:
   exp_task_name: IS2RE
   exp_desc: Val ID Prediction
-  exp_data_size: 10k
+  exp_data_size: all
   exp_model: CGCNN Evidential

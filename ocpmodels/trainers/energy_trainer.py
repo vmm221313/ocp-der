@@ -325,12 +325,13 @@ class EnergyTrainer(BaseTrainer):
         )
 
         gamma, v, alpha, beta = torch.split(out["energy"], 1, dim=-1)
+        pred = {"energy": gamma}
 
         if self.normalizer.get("normalize_labels", False):
-            gamma = self.normalizers["target"].denorm(gamma)
+            pred["energy"] = self.normalizers["target"].denorm(pred["energy"])
 
         metrics = evaluator.eval(
-            gamma,
+            pred,
             {"energy": energy_target},
             prev_metrics=metrics,
         )

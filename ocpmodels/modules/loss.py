@@ -117,9 +117,6 @@ class EvidentialLoss(nn.Module):
 		return torch.mean(reg) if reduce else reg
 
 	def EvidentialRegression(self, y_true, evidential_output, coeff):
-		print("evidential regression")
-		print(evidential_output.shape)
-		print(y_true.shape)
 		gamma, v, alpha, beta = torch.split(y_true, 1, dim=-1)
 		loss_nll = self.NIG_NLL(y_true, gamma, v, alpha, beta)
 		loss_reg = self.NIG_Reg(y_true, gamma, v, alpha, beta)

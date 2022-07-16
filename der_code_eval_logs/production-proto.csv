@@ -1,0 +1,12 @@
+data_split,task,model,lambda_,desc,start_time,job_id
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-04-50-43,2686611
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-08-22,2687425
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-17-46,31415
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-17-57,31415
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-17-59,31415
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-18-02,31415
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-20-06,2687764
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-05-40-51,2688077
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-06-00-24,2688152
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-06-05-24,2688341
+10k,IS2RE,cgcnn-evidential,0.05,Val ID Prediction,2022-07-14-06-09-54,2688403

@@ -358,7 +358,6 @@ class BaseTrainer(ABC):
         )
 
         loader = self.train_loader or self.val_loader or self.test_loader
-        print(self.config["model"])
         self.model = registry.get_model_class(self.config["model"])(
             loader.dataset[0].x.shape[-1]
             if loader
@@ -441,7 +440,6 @@ class BaseTrainer(ABC):
         self.loss_fn = {}
         self.loss_fn["energy"] = self.config["optim"].get("loss_energy", "mae")
         self.loss_fn["force"] = self.config["optim"].get("loss_force", "mae")
-        print(self.loss_fn)
         for loss, loss_name in self.loss_fn.items():
             if loss_name in ["l1", "mae"]:
                 self.loss_fn[loss] = nn.L1Loss()

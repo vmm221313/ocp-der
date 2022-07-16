@@ -3,12 +3,12 @@
 #SBATCH -C gpu
 #SBATCH -G 4
 #SBATCH -q regular
-#SBATCH -J der-code-eval
+#SBATCH -J der-main
 #SBATCH --mail-user=varun.m.iitkgp@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH -t 01:00:00
+#SBATCH -t 40:00:00
 #SBATCH -A m4140_g
-#SBATCH -o /global/homes/v/varunvm/ocp/slurm-logs/slurm-%x-%j.out
+#SBATCH -o /global/homes/v/varunvm/ocp/slurm-logs-all/slurm-%x-%j.out
 
 # OpenMP settings:
 export OMP_NUM_THREADS=1
@@ -16,9 +16,9 @@ export OMP_PLACES=threads
 export OMP_PROC_BIND=true
 
 # Experiment logs
-CONFIG_PATH="configs/is2re/10k/cgcnn-evidential/cgcnn-evidential.yml"
-OUTPUT_PATH="slurm-logs/slurm-der-code-eval-$SLURM_JOBID.out"
-LOG_DIR="der_code_eval_logs/"
+CONFIG_PATH="configs/is2re/all/cgcnn-evidential/cgcnn-evidential.yml"
+OUTPUT_PATH="slurm-logs-all/slurm-der-main-$SLURM_JOBID.out"
+LOG_DIR="der-all-logs/"
 
 # module load python
 # conda activate /global/homes/v/varunvm/.conda/envs/ocp-models
