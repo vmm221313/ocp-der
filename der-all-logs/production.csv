@@ -1,0 +1,9 @@
+timestamp_id,lambda_,seed,exp_task_name,exp_desc,exp_data_size,exp_model,job_id,mode,epochs,prev_timestamp
+2022-07-16-05-52-16,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2722778,,,
+2022-07-17-20-05-36,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2725462,,,
+2022-07-18-23-24-00,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2749346,predict,,
+2022-07-21-23-45-20,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2768877,train-checkpoints,,
+2022-07-22-04-12-00,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2769461,train-checkpoints,,
+2022-07-22-05-01-04,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2769570,train-checkpoints,,
+2022-07-23-23-09-04,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2786189,train,20.0,-
+2022-07-24-09-12-48,0.05,0,IS2RE,Val ID Prediction,all,CGCNN Evidential,2789847,predict,20,-

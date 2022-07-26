@@ -4,10 +4,10 @@ includes:
 model:
   name: cgcnn-evidential
   evidential: True
-  atom_embedding_size: 128
-  fc_feat_size: 256
+  atom_embedding_size: 384
+  fc_feat_size: 512
   num_fc_layers: 4
-  num_graph_conv_layers: 5
+  num_graph_conv_layers: 6
   num_gaussians: 100
   cutoff: 6.0
   regress_forces: False
@@ -23,30 +23,30 @@ model:
 #   the lr_milestones and warmup_steps need to be adjusted accordingly.
 
 optim:
-  batch_size: 64
-  eval_batch_size: 64
+  batch_size: 16
+  eval_batch_size: 16
   num_workers: 16
-  lr_initial: 0.01
+  lr_initial: 0.001
   lr_gamma: 0.1
   lr_milestones: # steps at which lr_initial <- lr_initial * lr_gamma
-    - 781
-    - 1406
-    - 2031
-  warmup_steps: 468
+    - 17981
+    - 32366
+    - 46752
+  warmup_steps: 10788
   warmup_factor: 0.2
-  max_epochs: 20 
+  max_epochs: 2
   loss_energy: evidential
 
 dataset:
   # train data
   - src: /pscratch/sd/v/varunvm/ocp/data/is2re/all/train/data.lmdb
     normalize_labels: True
-    target_mean: -0.969171404838562
-    target_std: 1.3671793937683105
+    target_mean: -1.525913953781128
+    target_std: 2.279365062713623
   # val data (optional)
   - src: /pscratch/sd/v/varunvm/ocp/data/is2re/all/val_id/data.lmdb
   # test data (optional)
-  # - src: [Path to test data]
+  # - src: /pscratch/sd/v/varunvm/ocp/data/is2re/all/val_id/data.lmdb
 
 task:
   exp_task_name: IS2RE

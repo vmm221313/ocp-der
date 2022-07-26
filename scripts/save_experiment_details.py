@@ -10,9 +10,11 @@ if __name__ == "__main__":
     parser.add_argument("--output_path", type=str)
     parser.add_argument("--log_dir", type=str)
     parser.add_argument("--job_id", type=str)
+    parser.add_argument("--mode", type=str)
+    parser.add_argument("--epochs", type=str, default="20")
+    parser.add_argument("--prev_timestamp", type=str, default="-")
 
     save_paths = vars(parser.parse_args())
-
     save_paths["log_path"] = save_paths["log_dir"] + "production.csv"
 
     with open(save_paths["output_path"], "r") as f:
@@ -21,6 +23,9 @@ if __name__ == "__main__":
     # All IS2RE CGCNN Evidential Lamb0p4 Val ID Prediction, 2022-07-02-17-20-00, job-9609357, 0
     logs = {
         "job_id": save_paths["job_id"],
+        "mode": save_paths["mode"],
+        "epochs": save_paths["epochs"],
+        "prev_timestamp": save_paths["prev_timestamp"],
     }
 
     parameters_to_read = [
@@ -55,6 +60,9 @@ if __name__ == "__main__":
                 "exp_data_size",
                 "exp_model",
                 "job_id",
+                "mode",
+                "epochs",
+                "prev_timestamp",
             ]
         )
 
