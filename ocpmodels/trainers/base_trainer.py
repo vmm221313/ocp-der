@@ -388,6 +388,8 @@ class BaseTrainer(ABC):
                 self.model, device_ids=[self.device]
             )
 
+        print(self.model)
+
     def load_checkpoint(self, checkpoint_path):
         if not os.path.isfile(checkpoint_path):
             raise FileNotFoundError(

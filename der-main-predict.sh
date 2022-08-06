@@ -17,7 +17,7 @@ export OMP_PROC_BIND=true
 
 # Experiment logs
 CONFIG_PATH="configs/is2re/all/cgcnn-evidential/cgcnn-evidential.yml"
-TIMESTAMP="2022-07-23-23-09-04"
+TIMESTAMP="2022-08-05-02-40-16"
 OUTPUT_PATH="slurm-logs-all/slurm-der-main-predict-$SLURM_JOBID.out"
 LOG_DIR="der-all-logs/"
 MODE="predict"
@@ -38,3 +38,5 @@ echo $CONDA_PREFIX
 # prediction
 srun python main.py --mode predict --config-yml $CONFIG_PATH --checkpoint checkpoints/$TIMESTAMP/checkpoint.pt
 srun python scripts/save_experiment_details.py --output_path $OUTPUT_PATH --log_dir $LOG_DIR --job_id $SLURM_JOBID --mode $MODE
+
+# python main.py --mode predict --config-yml configs/is2re/all/cgcnn-evidential/cgcnn-evidential.yml --checkpoint checkpoints/2022-07-23-23-09-04/checkpoint.pt

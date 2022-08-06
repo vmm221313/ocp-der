@@ -19,6 +19,33 @@ from ocpmodels.common.utils import (
 from ocpmodels.datasets.embeddings import KHOT_EMBEDDINGS, QMOF_KHOT_EMBEDDINGS
 from ocpmodels.models.base import BaseModel
 
+class DenseNormalGamma(nn.Module):
+    def __init__(self, 
+                input_dim, 
+                units, 
+                softplus_beta=1,
+                softplus_threshold=20
+                ):       
+        super(DenseNormalGamma, self).__init__()
+
+        self.units = units
+
+        self.dense = nn.Linear(input_dim, 4 * self.units)
+        self.softplus = torch.nn.Softplus(
+            beta=softplus_beta, threshold=softplus_threshold
+        )
+
+    def evidence(self, x):
+        return self.softplus(x)
+
+    def forward(self, x):
+        output = self.dense(x)
+        mu, logv, logalpha, logbeta = torch.split(output, split_size_or_sections=(1 * self.units), dim=-1)
+        v = self.evidence(logv)
+        alpha = self.evidence(logalpha) + 1
+        beta = self.evidence(logbeta)
+
+        return torch.concat([mu, v, alpha, beta], axis=-1)
 
 @registry.register_model("cgcnn-evidential")
 class CGCNN_Evidential(BaseModel):
@@ -81,10 +108,10 @@ class CGCNN_Evidential(BaseModel):
         self.cutoff = cutoff
         self.otf_graph = otf_graph
 
-        self.units = units
-        self.softplus = torch.nn.Softplus(
-            beta=softplus_beta, threshold=softplus_threshold
-        )
+        # self.units = units
+        # self.softplus = torch.nn.Softplus(
+        #     beta=softplus_beta, threshold=softplus_threshold
+        # )
 
         # Get CGCNN atom embeddings
         if embeddings == "khot":
@@ -121,13 +148,14 @@ class CGCNN_Evidential(BaseModel):
                 layers.append(nn.Linear(fc_feat_size, fc_feat_size))
                 layers.append(nn.Softplus())
             self.fcs = nn.Sequential(*layers)
-        self.fc_out = nn.Linear(fc_feat_size, self.num_targets)
+        # self.fc_out = nn.Linear(fc_feat_size, self.num_targets)
+        self.fc_out = DenseNormalGamma(fc_feat_size, units, softplus_beta, softplus_threshold)
 
         self.cutoff = cutoff
         self.distance_expansion = GaussianSmearing(0.0, cutoff, num_gaussians)
 
-    def evidence(self, x):
-        return self.softplus(x)
+    # def evidence(self, x):
+    #     return self.softplus(x)
 
     @conditional_grad(torch.enable_grad())
     def _forward(self, data):
@@ -171,16 +199,21 @@ class CGCNN_Evidential(BaseModel):
         if hasattr(self, "fcs"):
             mol_feats = self.fcs(mol_feats)
 
-        energy = self.fc_out(mol_feats)
-        mu, logv, logalpha, logbeta = torch.split(
-            energy, split_size_or_sections=(1 * self.units), dim=-1
-        )
+        pred = self.fc_out(mol_feats)
+        # print(pred)
 
-        v = self.evidence(logv)
-        alpha = self.evidence(logalpha) + 1
-        beta = self.evidence(logbeta)
+        # mu, logv, logalpha, logbeta = torch.split(
+        #     energy, split_size_or_sections=(1 * self.units), dim=-1
+        # )
 
-        return torch.concat([mu, v, alpha, beta], axis=-1)
+        # v = self.evidence(logv)
+        # alpha = self.evidence(logalpha) + 1
+        # beta = self.evidence(logbeta)
+
+        # return torch.concat([mu, v, alpha, beta], axis=-1)
+
+        return pred
+
 
     def forward(self, data):
         if self.regress_forces:

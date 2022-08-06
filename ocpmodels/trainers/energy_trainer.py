@@ -103,10 +103,12 @@ class EnergyTrainer(BaseTrainer):
     def load_task(self):
         logging.info(f"Loading dataset: {self.config['task']['dataset']}")
         print(self.config)
-        if self.config["model_attributes"]["evidential"]:
-            self.num_targets = 4
-        else:
-            self.num_targets = 1
+        self.num_targets = 1
+
+        # if self.config["model_attributes"]["evidential"]:
+        #     self.num_targets = 4
+        # else:
+        #     self.num_targets = 1
 
     @torch.no_grad()
     def predict(
@@ -127,13 +129,16 @@ class EnergyTrainer(BaseTrainer):
             loader = [[loader]]
 
         self.model.eval()
+
+        print(self.model)
+
         if self.ema:
             self.ema.store()
             self.ema.copy_to()
 
         if self.normalizers is not None and "target" in self.normalizers:
             self.normalizers["target"].to(self.device)
-        predictions = {"id": [], "energy": []}
+        predictions = {"id": [], "energy": [], "v": [], "alpha": [], "beta": []}
 
         for i, batch in tqdm(
             enumerate(loader),
@@ -145,26 +150,37 @@ class EnergyTrainer(BaseTrainer):
             with torch.cuda.amp.autocast(enabled=self.scaler is not None):
                 out = self._forward(batch)
 
+            # print()
+            # print("output before normalization")
+            # print(out)
+
             if self.normalizers is not None and "target" in self.normalizers:
                 out["energy"] = self.normalizers["target"].denorm(
                     out["energy"]
                 )
+
+            # print("output after normalization")
+            # print(out)
+            # print()
 
             if per_image:
                 predictions["id"].extend(
                     [str(i) for i in batch[0].sid.tolist()]
                 )
                 predictions["energy"].extend(out["energy"].tolist())
+                predictions["v"].extend(out["v"].tolist())
+                predictions["alpha"].extend(out["alpha"].tolist())
+                predictions["beta"].extend(out["beta"].tolist())
             else:
                 predictions["energy"] = out["energy"].detach()
                 return predictions
 
-        self.save_results(predictions, results_file, keys=["energy"])
+        self.save_results(predictions, results_file, keys=["energy", "v", "alpha", "beta"])
 
         if self.ema:
             self.ema.restore()
 
-        return predictions
+        return predictions 
 
     def train(self, disable_eval_tqdm=False):
         eval_every = self.config["optim"].get(
@@ -303,7 +319,10 @@ class EnergyTrainer(BaseTrainer):
             output = output.view(-1)
 
         return {
-            "energy": output,
+            "energy": output[:, 0],
+            "v": output[:, 1],
+            "alpha": output[:, 2],
+            "beta": output[:, 3],
         }
 
     def _compute_loss(self, out, batch_list):
@@ -316,7 +335,8 @@ class EnergyTrainer(BaseTrainer):
         else:
             target_normed = energy_target
 
-        loss = self.loss_fn["energy"](out["energy"], target_normed)
+        # loss = self.loss_fn["energy"](torch.cat(list(out.values()), axis=-1), target_normed)
+        loss = self.loss_fn["energy"](out, target_normed)
         return loss
 
     def _compute_metrics(self, out, batch_list, evaluator, metrics={}):
@@ -324,8 +344,9 @@ class EnergyTrainer(BaseTrainer):
             [batch.y_relaxed.to(self.device) for batch in batch_list], dim=0
         )
 
-        gamma, v, alpha, beta = torch.split(out["energy"], 1, dim=-1)
-        pred = {"energy": gamma}
+        # gamma, v, alpha, beta = torch.split(out["energy"], 1, dim=-1)
+        # pred = {"energy": gamma}
+        pred = {"energy": out["energy"]}
 
         if self.normalizer.get("normalize_labels", False):
             pred["energy"] = self.normalizers["target"].denorm(pred["energy"])

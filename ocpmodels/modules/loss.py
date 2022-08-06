@@ -58,10 +58,10 @@ class DDPLoss(nn.Module):
 			loss = self.loss_fn(input, target, natoms)
 		if self.reduction == "mean":
 			num_samples = (
-				batch_size if batch_size is not None else input.shape[0]
+				batch_size if batch_size is not None else input["energy"].shape[0]
 			)
 			num_samples = distutils.all_reduce(
-				num_samples, device=input.device
+				num_samples, device=input["energy"].device
 			)
 			# Multiply by world size since gradients are averaged
 			# across DDP replicas
@@ -74,55 +74,133 @@ class EvidentialLoss(nn.Module):
 		super().__init__()
 		self.lambda_ = lambda_
 
-	def NIG_NLL(self, y, gamma, v, alpha, beta, reduce=True):
-		twoBlambda = 2 * beta * (1 + v)
+	# def NIG_NLL(self, y, gamma, v, alpha, beta, reduce=True):
+	# 	twoBlambda = 2 * beta * (1 + v)
 
-		nll = (
-			0.5 * torch.log(np.pi / v)
-			- alpha * torch.log(twoBlambda)
-			+ (alpha + 0.5) * torch.log(v * (y - gamma) ** 2 + twoBlambda)
-			+ torch.lgamma(alpha)
-			- torch.lgamma(alpha + 0.5)
-		)
+	# 	nll = (
+	# 		0.5 * torch.log(np.pi / v)
+	# 		- alpha * torch.log(twoBlambda)
+	# 		+ (alpha + 0.5) * torch.log(v * (y - gamma) ** 2 + twoBlambda)
+	# 		+ torch.lgamma(alpha)
+	# 		- torch.lgamma(alpha + 0.5)
+	# 	)
+
+	# 	return torch.mean(nll) if reduce else nll
+
+	def NIG_NLL(self, y, gamma, v, alpha, beta, reduce=True):
+		twoBlambda = 2*beta*(1+v)
+
+		nll = 0.5*torch.log(np.pi/v)  \
+			- alpha*torch.log(twoBlambda)  \
+			+ (alpha+0.5) * torch.log(v*(y-gamma)**2 + twoBlambda)  \
+			+ torch.lgamma(alpha)  \
+			- torch.lgamma(alpha+0.5)
 
 		return torch.mean(nll) if reduce else nll
 
+	# def KL_NIG(self, mu1, v1, a1, b1, mu2, v2, a2, b2):
+	# 	KL = (
+	# 		0.5 * (a1 - 1) / b1 * (v2 * torch.square(mu2 - mu1))
+	# 		+ 0.5 * v2 / v1
+	# 		- 0.5 * torch.log(torch.abs(v2) / torch.abs(v1))
+	# 		- 0.5
+	# 		+ a2 * torch.log(b1 / b2)
+	# 		- (torch.lgamma(a1) - torch.lgamma(a2))
+	# 		+ (a1 - a2) * torch.digamma(a1)
+	# 		- (b1 - b2) * a1 / b1
+	# 	)
+	# 	return KL
+
 	def KL_NIG(self, mu1, v1, a1, b1, mu2, v2, a2, b2):
-		KL = (
-			0.5 * (a1 - 1) / b1 * (v2 * torch.square(mu2 - mu1))
-			+ 0.5 * v2 / v1
-			- 0.5 * torch.log(torch.abs(v2) / torch.abs(v1))
-			- 0.5
-			+ a2 * torch.log(b1 / b2)
-			- (torch.lgamma(a1) - torch.lgamma(a2))
-			+ (a1 - a2) * torch.digamma(a1)
-			- (b1 - b2) * a1 / b1
-		)
+		KL = 0.5*(a1-1)/b1 * (v2*torch.square(mu2-mu1))  \
+			+ 0.5*v2/v1  \
+			- 0.5*torch.log(torch.abs(v2)/torch.abs(v1))  \
+			- 0.5 + a2*torch.log(b1/b2)  \
+			- (torch.lgamma(a1) - torch.lgamma(a2))  \
+			+ (a1 - a2)*torch.digamma(a1)  \
+			- (b1 - b2)*a1/b1
+
 		return KL
 
-	def NIG_Reg(
-		self, y, gamma, v, alpha, beta, omega=0.01, reduce=True, kl=False
-	):
-		error = torch.abs(y - gamma)
+	# def NIG_Reg(
+	# 	self, y, gamma, v, alpha, beta, omega=0.01, reduce=True, kl=False
+	# ):
+	# 	error = torch.abs(y - gamma)
+
+	# 	if kl:
+	# 		kl = self.KL_NIG(
+	# 			gamma, v, alpha, beta, gamma, omega, 1 + omega, beta
+	# 		)
+	# 		reg = error * kl
+	# 	else:
+	# 		evi = 2 * v + (alpha)
+	# 		reg = error * evi
+
+	# 	return torch.mean(reg) if reduce else reg
+
+	def NIG_Reg(self, y, gamma, v, alpha, beta, omega=0.01, reduce=True, kl=False):
+		# error = tf.stop_gradient(tf.abs(y-gamma))
+		error = torch.abs(y-gamma)
 
 		if kl:
-			kl = self.KL_NIG(
-				gamma, v, alpha, beta, gamma, omega, 1 + omega, beta
-			)
-			reg = error * kl
+			kl = self.KL_NIG(gamma, v, alpha, beta, gamma, omega, 1+omega, beta)
+			reg = error*kl
 		else:
-			evi = 2 * v + (alpha)
-			reg = error * evi
+			evi = 2*v+(alpha)
+			reg = error*evi
 
 		return torch.mean(reg) if reduce else reg
 
+	# def EvidentialRegression(self, y_true, evidential_output, coeff):
+
+	# 	# print(y_true.shape)
+	# 	# print(evidential_output.shape)
+
+	# 	gamma, v, alpha, beta = torch.split(evidential_output, 1, dim=-1)
+	# 	loss_nll = self.NIG_NLL(y_true, gamma, v, alpha, beta)
+	# 	loss_reg = self.NIG_Reg(y_true, gamma, v, alpha, beta)
+
+	# 	# print("y_true", y_true)
+	# 	# print("evidential_output", evidential_output)
+	# 	# print("gamma", gamma)
+	# 	# print("v", v)
+	# 	# print("alpha", alpha)
+	# 	# print("beta", beta)
+	# 	# print("loss_nll", loss_nll)
+	# 	# print("loss_reg", loss_reg)
+
+	# 	return loss_nll + coeff * loss_reg
+
 	def EvidentialRegression(self, y_true, evidential_output, coeff):
-		gamma, v, alpha, beta = torch.split(y_true, 1, dim=-1)
+		gamma = evidential_output["energy"]
+		v = evidential_output["v"]
+		alpha = evidential_output["alpha"]
+		beta = evidential_output["beta"]
+
+		# print(evidential_output)
+
+		# gamma, v, alpha, beta = torch.split(evidential_output, split_size_or_sections=1, dim=-1)
+		
 		loss_nll = self.NIG_NLL(y_true, gamma, v, alpha, beta)
 		loss_reg = self.NIG_Reg(y_true, gamma, v, alpha, beta)
+
+		# print("y_true.shape", y_true.shape)
+		# print("y_true", y_true)
+		# print("evidential_output", evidential_output)
+		# # print("gamma", gamma)
+		# # print("v", v)
+		# # print("alpha", alpha)
+		# # print("beta", beta)
+		# print("loss_nll", loss_nll)
+		# print("loss_reg", loss_reg)
+
 		return loss_nll + coeff * loss_reg
 
 	def forward(self, input: torch.Tensor, target: torch.Tensor):
-		return self.EvidentialRegression(
-			y_true=input, evidential_output=target, coeff=self.lambda_
-		)
+
+		# print()
+		# loss = self.EvidentialRegression(y_true=input, evidential_output=target, coeff=self.lambda_)
+		loss = self.EvidentialRegression(y_true=target, evidential_output=input, coeff=self.lambda_)
+		# print()
+
+		return loss
